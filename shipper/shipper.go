@@ -6,7 +6,6 @@ import (
 	"time"
 
 	go_aserto_net_scribe "github.com/aserto-dev/go-aserto-net/scribe"
-	"github.com/aserto-dev/go-lib/natsutil"
 	"github.com/aserto-dev/self-decision-logger/scribe"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
@@ -34,7 +33,7 @@ type Shipper struct {
 	batch     []*nats.Msg
 }
 
-func New(ctx context.Context, logger *zerolog.Logger, cfg *Config, natsCli *natsutil.Client, scf scribe.ClientFactory) (*Shipper, error) {
+func New(ctx context.Context, logger *zerolog.Logger, cfg *Config, natsCli *nats.Conn, scf scribe.ClientFactory) (*Shipper, error) {
 	cfg.SetDefaults()
 
 	newLogger := logger.With().Str("component", "shipper").Logger()

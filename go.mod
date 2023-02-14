@@ -5,11 +5,9 @@ go 1.19
 require (
 	github.com/aserto-dev/aserto-go v0.8.14-0.20221018123009-a56db85a7ed3
 	github.com/aserto-dev/aserto-grpc v0.1.1
-	github.com/aserto-dev/authorizer-extensions v0.10.8
 	github.com/aserto-dev/go-aserto-net v0.8.5
 	github.com/aserto-dev/go-authorizer v0.20.2
 	github.com/aserto-dev/go-grpc v0.8.55
-	github.com/aserto-dev/go-lib v0.9.1
 	github.com/aserto-dev/topaz v0.20.23
 	github.com/google/uuid v1.3.0
 	github.com/mitchellh/mapstructure v1.5.0
@@ -23,9 +21,6 @@ require (
 )
 
 require (
-	github.com/aserto-dev/errors v0.0.4 // indirect
-	github.com/aserto-dev/go-grpc-authz v0.8.0 // indirect
-	github.com/aserto-dev/go-utils v0.8.29 // indirect
 	github.com/aserto-dev/header v0.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect

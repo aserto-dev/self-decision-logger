@@ -13,7 +13,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/aserto-dev/go-lib/natsutil"
 	nats_server "github.com/nats-io/nats-server/v2/server"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
@@ -55,10 +54,11 @@ func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dop
 	}
 	go natsServer.Start()
 	natsServer.ReadyForConnections(time.Second * 10)
-	natsCli, err := natsutil.NewClient(&natsutil.Config{
-		Enabled: true,
-		Address: fmt.Sprintf("localhost:%d", cfg.Port),
-	}, logger)
+	natsCli, err := nats.Connect(fmt.Sprintf("localhost:%d", cfg.Port))
+	if err != nil {
+		logger.Err(err).Msg("error connecting NATS client")
+		return nil, err
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating nats client")
 	}

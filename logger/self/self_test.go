@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aserto-dev/aserto-grpc/grpcclient"
 	"github.com/aserto-dev/go-aserto-net/scribe"
+	client "github.com/aserto-dev/go-aserto/client"
 	api "github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
 	scribe_grpc "github.com/aserto-dev/go-grpc/aserto/scribe/v2"
 	scribe_cli "github.com/aserto-dev/self-decision-logger/scribe"
@@ -37,7 +37,7 @@ var cfg = self.Config{
 		PublishTimeoutSeconds: 1,
 	},
 	Scribe: scribe_cli.Config{
-		Config: grpcclient.Config{
+		Config: client.Config{
 			Address: scribeAddress,
 		},
 		AckWaitSeconds: 10,
@@ -152,7 +152,7 @@ func TestSelfLogger(t *testing.T) {
 	cleanup := runServer(ctx, assert, logs, done, received)
 	defer cleanup()
 
-	dlog, err := self.NewFromConfig(ctx, &cfg, &l, grpcclient.NewDialOptionsProvider())
+	dlog, err := self.NewFromConfig(ctx, &cfg, &l, client.NewDialOptionsProvider())
 	assert.NoError(err)
 	defer dlog.Shutdown()
 
@@ -198,7 +198,7 @@ func TestSelfLoggerWithDisconnect(t *testing.T) {
 		done <- true
 	}()
 
-	dlog, err := self.NewFromConfig(ctx, &cfg, &l, grpcclient.NewDialOptionsProvider())
+	dlog, err := self.NewFromConfig(ctx, &cfg, &l, client.NewDialOptionsProvider())
 	assert.NoError(err)
 	defer dlog.Shutdown()
 

@@ -3,9 +3,8 @@ package scribe
 import (
 	"context"
 
-	"github.com/aserto-dev/aserto-go/client"
-	aserto_client "github.com/aserto-dev/aserto-grpc/grpcclient"
 	"github.com/aserto-dev/go-aserto-net/scribe"
+	"github.com/aserto-dev/go-aserto/client"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -13,7 +12,7 @@ import (
 
 type ClientFactory func() (*scribe.Client, error)
 
-func NewClientFactory(ctx context.Context, cfg *Config, dop aserto_client.DialOptionsProvider) ClientFactory {
+func NewClientFactory(ctx context.Context, cfg *Config, dop client.DialOptionsProvider) ClientFactory {
 	return func() (*scribe.Client, error) {
 		var conn grpc.ClientConnInterface
 		var err error
@@ -24,7 +23,7 @@ func NewClientFactory(ctx context.Context, cfg *Config, dop aserto_client.DialOp
 				return nil, errors.Wrap(err, "error dialing server")
 			}
 		} else {
-			options, err := cfg.Config.ToClientOptions(dop)
+			options, err := cfg.Config.ToConnectionOptions(dop)
 			if err != nil {
 				return nil, errors.Wrap(err, "error calculating connection options")
 			}

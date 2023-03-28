@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aserto-dev/aserto-grpc/grpcclient"
+	"github.com/aserto-dev/go-aserto/client"
 	api "github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
 	"github.com/aserto-dev/self-decision-logger/scribe"
 	"github.com/aserto-dev/self-decision-logger/shipper"
@@ -30,7 +30,7 @@ type selfLogger struct {
 	shipper    *shipper.Shipper
 }
 
-func New(ctx context.Context, cfg map[string]interface{}, logger *zerolog.Logger, dop grpcclient.DialOptionsProvider) (decisionlog.DecisionLogger, error) {
+func New(ctx context.Context, cfg map[string]interface{}, logger *zerolog.Logger, dop client.DialOptionsProvider) (decisionlog.DecisionLogger, error) {
 	selfCfg, err := mapConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func New(ctx context.Context, cfg map[string]interface{}, logger *zerolog.Logger
 	return NewFromConfig(ctx, selfCfg, logger, dop)
 }
 
-func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dop grpcclient.DialOptionsProvider) (decisionlog.DecisionLogger, error) {
+func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dop client.DialOptionsProvider) (decisionlog.DecisionLogger, error) {
 	cfg.SetDefaults()
 
 	opts := &nats_server.Options{

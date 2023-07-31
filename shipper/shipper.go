@@ -5,7 +5,6 @@ import (
 	"math"
 	"time"
 
-	go_aserto_net_scribe "github.com/aserto-dev/go-aserto-net/scribe"
 	"github.com/aserto-dev/self-decision-logger/scribe"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
@@ -27,7 +26,7 @@ type Shipper struct {
 	jsCtx     nats.JetStreamContext
 	subs      *nats.Subscription
 	scf       scribe.ClientFactory
-	scribeCli *go_aserto_net_scribe.Client
+	scribeCli *scribe.Client
 	queueCh   chan *nats.Msg
 	timer     *time.Timer
 	batch     []*nats.Msg
@@ -129,14 +128,14 @@ func (s *Shipper) publishBatch() {
 
 	data := make([]*anypb.Any, 0, len(s.batch))
 	for _, msg := range s.batch {
-		any := anypb.Any{}
-		err := proto.Unmarshal(msg.Data, &any)
+		pub := anypb.Any{}
+		err := proto.Unmarshal(msg.Data, &pub)
 		if err != nil {
 			s.logger.Error().Err(err).Msg("error unmarshalling message")
 			s.nak(msg)
 			continue
 		}
-		data = append(data, &any)
+		data = append(data, &pub)
 	}
 
 	curBatch := s.batch
@@ -182,7 +181,7 @@ func (s *Shipper) nak(msg *nats.Msg) {
 	_ = msg.Nak(nats.Context(s.ctx))
 }
 
-func (s *Shipper) getScribeClient() (*go_aserto_net_scribe.Client, error) {
+func (s *Shipper) getScribeClient() (*scribe.Client, error) {
 	if s.scribeCli != nil {
 		return s.scribeCli, nil
 	}

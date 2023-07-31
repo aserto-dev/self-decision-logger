@@ -3,14 +3,14 @@ package self_test
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"testing"
 	"time"
 
-	"github.com/aserto-dev/go-aserto-net/scribe"
 	client "github.com/aserto-dev/go-aserto/client"
 	api "github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
-	scribe_grpc "github.com/aserto-dev/go-grpc/aserto/scribe/v2"
+	scribe_grpc "github.com/aserto-dev/go-decision-logs/aserto/scribe/v2"
 	scribe_cli "github.com/aserto-dev/self-decision-logger/scribe"
 	"github.com/aserto-dev/self-decision-logger/shipper"
 	"github.com/google/uuid"
@@ -45,17 +45,81 @@ var cfg = self.Config{
 	},
 }
 
-func startScribe(ctx context.Context, assert *require.Assertions, cb scribe.ServerBatchFunc) func() {
+type mockBatch struct {
+	ID    string
+	wbSrv scribe_grpc.Scribe_WriteBatchServer
+	Batch []*anypb.Any
+}
+
+func (m *mockBatch) Ack() {
+	err := m.wbSrv.Send(&scribe_grpc.WriteBatchResponse{
+		Id:  m.ID,
+		Ack: true,
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+type mockServer struct {
+	ctx     context.Context
+	cancel  context.CancelFunc
+	errCh   chan error
+	handler func(ctx context.Context, batch *mockBatch)
+}
+
+func newMockServer(ctx context.Context, cb func(ctx context.Context, batch *mockBatch)) *mockServer {
+	cctx, cancel := context.WithCancel(ctx)
+	return &mockServer{
+		ctx:     cctx,
+		cancel:  cancel,
+		handler: cb,
+	}
+}
+func (s *mockServer) WriteBatch(wbs scribe_grpc.Scribe_WriteBatchServer) error {
+	defer s.cancel()
+
+	go func() {
+		for {
+			req, err := wbs.Recv()
+			if err == io.EOF {
+				s.errCh <- nil
+				break
+			}
+			if err != nil {
+				s.errCh <- err
+				break
+			}
+
+			b := mockBatch{
+				ID:    req.Id,
+				wbSrv: wbs,
+				Batch: req.Batch,
+			}
+
+			go s.handler(wbs.Context(), &b)
+		}
+	}()
+
+	select {
+	case <-wbs.Context().Done():
+		return nil
+	case <-s.ctx.Done():
+		return nil
+	case err := <-s.errCh:
+		return err
+	}
+}
+
+func startScribe(ctx context.Context, assert *require.Assertions, cb func(ctx context.Context, batch *mockBatch)) func() {
 	l, err := net.Listen("tcp", scribeAddress)
 	if err != nil {
 		assert.FailNow(err.Error())
 	}
 
 	grpcSrv := grpc.NewServer()
-	scribeSrv, cleanup, err := scribe.NewServer(ctx, cb)
-	if err != nil {
-		assert.FailNow(err.Error())
-	}
+
+	scribeSrv := newMockServer(ctx, cb)
 
 	grpcSrv.RegisterService(&scribe_grpc.Scribe_ServiceDesc, scribeSrv)
 	go func() {
@@ -66,15 +130,14 @@ func startScribe(ctx context.Context, assert *require.Assertions, cb scribe.Serv
 	}()
 
 	return func() {
-		cleanup()
 		grpcSrv.Stop()
 	}
 }
 
 func runServer(ctx context.Context, assert *require.Assertions, logs int, done chan<- bool, received map[string]bool) func() {
-	recv := make(chan *scribe.Batch)
+	recv := make(chan *mockBatch)
 
-	cleanup := startScribe(ctx, assert, func(ctx context.Context, b *scribe.Batch) {
+	cleanup := startScribe(ctx, assert, func(ctx context.Context, b *mockBatch) {
 		recv <- b
 	})
 

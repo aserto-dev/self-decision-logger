@@ -3,17 +3,16 @@ package scribe
 import (
 	"context"
 
-	"github.com/aserto-dev/go-aserto-net/scribe"
 	"github.com/aserto-dev/go-aserto/client"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type ClientFactory func() (*scribe.Client, error)
+type ClientFactory func() (*Client, error)
 
 func NewClientFactory(ctx context.Context, cfg *Config, dop client.DialOptionsProvider) ClientFactory {
-	return func() (*scribe.Client, error) {
+	return func() (*Client, error) {
 		var conn grpc.ClientConnInterface
 		var err error
 
@@ -34,7 +33,7 @@ func NewClientFactory(ctx context.Context, cfg *Config, dop client.DialOptionsPr
 			conn = cliConn.Conn
 		}
 
-		scribeCli, err := scribe.NewClient(ctx, conn, scribe.AckWaitSeconds(cfg.AckWaitSeconds))
+		scribeCli, err := NewClient(ctx, conn, AckWaitSeconds(cfg.AckWaitSeconds))
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating scribe client")
 		}

@@ -86,12 +86,12 @@ func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dop
 }
 
 func (l *selfLogger) Log(d *api.Decision) error {
-	any, err := anypb.New(d)
+	pub, err := anypb.New(d)
 	if err != nil {
 		return errors.Wrap(err, "error creating any wrapper")
 	}
 
-	bytes, err := proto.Marshal(any)
+	bytes, err := proto.Marshal(pub)
 	if err != nil {
 		return errors.Wrap(err, "error marshallng decision")
 	}

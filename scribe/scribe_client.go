@@ -32,7 +32,7 @@ type AckWaitSeconds int
 
 var (
 	ErrAck        = errors.New("ack wait must be > 0")
-	ErrAckTimeout = errors.New("timed out waiting for acknowldgement")
+	ErrAckTimeout = errors.New("timed out waiting for acknowledgement")
 )
 
 func (w AckWaitSeconds) applyClient(cliOpts *clientOptions) error {

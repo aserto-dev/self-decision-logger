@@ -1,6 +1,12 @@
 .DS_Store
+/.dev/
 # external dependencies from Depfile
 /.ext/
+
+/.vscode/launch.json
+
+# nats test store
+/logger/self/nats_store/
 
 # https://github.com/golang/go/issues/53502
 # go.work.sum is machine specific and should not be checked in

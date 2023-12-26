@@ -30,7 +30,7 @@ func NewClientFactory(ctx context.Context, cfg *Config, dop client.DialOptionsPr
 			if err != nil {
 				return nil, errors.Wrap(err, "error calculating connection options")
 			}
-			conn = cliConn.Conn
+			conn = cliConn
 		}
 
 		scribeCli, err := NewClient(ctx, conn, AckWaitSeconds(cfg.AckWaitSeconds))

@@ -1,11 +1,12 @@
 .DS_Store
 /.dev/
-# external dependencies from Depfile
 /.ext/
-
 /.vscode/launch.json
 
-# nats test store
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# NATS test store
 /logger/self/nats_store/
 
 # https://github.com/golang/go/issues/53502

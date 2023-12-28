@@ -15,11 +15,16 @@ func init() {
 	os.Setenv("DOCKER_BUILDKIT", "1")
 }
 
+func Deps() {
+	deps.GetAllDeps()
+}
+
 // Lint runs linting for the entire project.
 func Lint() error {
 	return common.Lint()
 }
 
-func Deps() {
-	deps.GetAllDeps()
+// Test runs all tests and generates a code coverage report.
+func Test() error {
+	return common.Test("-timeout", "60s")
 }

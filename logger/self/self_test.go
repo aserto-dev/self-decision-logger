@@ -11,18 +11,17 @@ import (
 	client "github.com/aserto-dev/go-aserto/client"
 	api "github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
 	scribe_grpc "github.com/aserto-dev/go-decision-logs/aserto/scribe/v2"
+	self "github.com/aserto-dev/self-decision-logger/logger/self"
 	scribe_cli "github.com/aserto-dev/self-decision-logger/scribe"
-	"github.com/aserto-dev/self-decision-logger/shipper"
+	shipper "github.com/aserto-dev/self-decision-logger/shipper"
+
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/require"
-
-	"github.com/aserto-dev/self-decision-logger/logger/self"
 )
 
 const (

@@ -33,6 +33,7 @@ var cfg = self.Config{
 	Port:           4222,
 	StoreDirectory: "./nats_store",
 	Shipper: shipper.Config{
+		MaxBatchSize:          500, // must be a divisor of logsPerServer.
 		DeleteStreamOnDone:    true,
 		PublishTimeoutSeconds: 1,
 	},
@@ -141,8 +142,8 @@ func runServer(ctx context.Context, assert *require.Assertions, logs int, done c
 		recv <- b
 	})
 
-	count := logs
 	go func() {
+		count := logs
 		for count > 0 {
 			select {
 			case b := <-recv:
@@ -162,6 +163,7 @@ func runServer(ctx context.Context, assert *require.Assertions, logs int, done c
 				count = -1
 			}
 		}
+		assert.Zero(count)
 		done <- true
 	}()
 

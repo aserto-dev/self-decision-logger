@@ -11,8 +11,12 @@ import (
 )
 
 func init() {
-	os.Setenv("GO_VERSION", "1.19")
+	os.Setenv("GO_VERSION", "1.20")
 	os.Setenv("DOCKER_BUILDKIT", "1")
+}
+
+func Deps() {
+	deps.GetAllDeps()
 }
 
 // Lint runs linting for the entire project.
@@ -20,6 +24,7 @@ func Lint() error {
 	return common.Lint()
 }
 
-func Deps() {
-	deps.GetAllDeps()
+// Test runs all tests and generates a code coverage report.
+func Test() error {
+	return common.Test("-timeout", "60s")
 }

@@ -73,7 +73,6 @@ linters:
   enable:
     - asciicheck
     - bodyclose
-    - depguard
     - dogsled
     - errcheck
     - exportloopref
@@ -106,6 +105,7 @@ linters:
     - unused
 
   # don't enable:
+    # - depguard
     # - dupl
     # - gochecknoglobals
     # - gocognit

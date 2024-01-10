@@ -93,7 +93,7 @@ func (l *selfLogger) Log(d *api.Decision) error {
 
 	bytes, err := proto.Marshal(pub)
 	if err != nil {
-		return errors.Wrap(err, "error marshallng decision")
+		return errors.Wrap(err, "error marshaling decision")
 	}
 
 	_, err = l.jsCtx.Publish(subject, bytes, nats.ExpectStream(stream))

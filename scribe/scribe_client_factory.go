@@ -3,7 +3,8 @@ package scribe
 import (
 	"context"
 
-	"github.com/aserto-dev/go-aserto/client"
+	client "github.com/aserto-dev/go-aserto"
+
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -26,7 +27,7 @@ func NewClientFactory(ctx context.Context, cfg *Config, dop client.DialOptionsPr
 			if err != nil {
 				return nil, errors.Wrap(err, "error calculating connection options")
 			}
-			cliConn, err := client.NewConnection(ctx, options...)
+			cliConn, err := client.NewConnection(options...)
 			if err != nil {
 				return nil, errors.Wrap(err, "error calculating connection options")
 			}

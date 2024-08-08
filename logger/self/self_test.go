@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	client "github.com/aserto-dev/go-aserto/client"
+	client "github.com/aserto-dev/go-aserto"
 	api "github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
 	scribe_grpc "github.com/aserto-dev/go-decision-logs/aserto/scribe/v2"
 	self "github.com/aserto-dev/self-decision-logger/logger/self"
@@ -76,6 +76,7 @@ func newMockServer(ctx context.Context, cb func(ctx context.Context, batch *mock
 		handler: cb,
 	}
 }
+
 func (s *mockServer) WriteBatch(wbs scribe_grpc.Scribe_WriteBatchServer) error {
 	defer s.cancel()
 
@@ -137,7 +138,7 @@ func startScribe(ctx context.Context, assert *require.Assertions, cb func(ctx co
 func runServer(ctx context.Context, assert *require.Assertions, logs int, done chan<- bool, received map[string]bool) func() {
 	recv := make(chan *mockBatch)
 
-	cleanup := startScribe(ctx, assert, func(ctx context.Context, b *mockBatch) {
+	cleanup := startScribe(ctx, assert, func(_ context.Context, b *mockBatch) {
 		recv <- b
 	})
 
@@ -173,7 +174,7 @@ func makeDecision() *api.Decision {
 	return &api.Decision{
 		Id: uuid.NewString(),
 		// TenantId:  "e5e07c3c-c449-11eb-a518-0045ec92c058",
-		Timestamp: timestamppb.New(time.Date(2021, time.September, 02, 17, 22, 0, 0, time.UTC)),
+		Timestamp: timestamppb.New(time.Date(2021, time.September, 0o2, 17, 22, 0, 0, time.UTC)),
 		User: &api.DecisionUser{
 			Context: &api.IdentityContext{
 				Identity: "some@name.org",

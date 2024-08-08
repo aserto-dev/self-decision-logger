@@ -80,6 +80,7 @@ func New(ctx context.Context, logger *zerolog.Logger, cfg *Config, natsCli *nats
 	}
 	return s, nil
 }
+
 func (s *Shipper) Shutdown() {
 	s.cancel()
 	_ = s.subs.Unsubscribe()
@@ -87,6 +88,7 @@ func (s *Shipper) Shutdown() {
 		_ = s.jsCtx.DeleteStream(stream)
 	}
 }
+
 func (s *Shipper) run() error {
 	subs, err := s.jsCtx.ChanQueueSubscribe(subject, "decision-queue", s.queueCh,
 		nats.Context(s.ctx),
@@ -114,6 +116,7 @@ func (s *Shipper) run() error {
 	s.logger.Info().Msg("shipper is running")
 	return nil
 }
+
 func (s *Shipper) handleMsg(msg *nats.Msg) {
 	if s.batch == nil {
 		s.timer.Reset(time.Second * time.Duration(s.cfg.PublishTimeoutSeconds))
@@ -123,6 +126,7 @@ func (s *Shipper) handleMsg(msg *nats.Msg) {
 		s.publishBatch()
 	}
 }
+
 func (s *Shipper) publishBatch() {
 	s.logger.Trace().Msgf("publishing batch with size: %d", len(s.batch))
 
@@ -147,7 +151,7 @@ func (s *Shipper) publishBatch() {
 		return
 	}
 
-	err = cli.WriteBatch(s.ctx, data, func(ack bool, err error) {
+	err = cli.WriteBatch(s.ctx, data, func(_ /*ack*/ bool, err error) {
 		var f func(*nats.Msg)
 		if err == nil {
 			f = s.ack
@@ -160,7 +164,6 @@ func (s *Shipper) publishBatch() {
 		}
 		s.logger.Trace().Msgf("processed %d acks", len(curBatch))
 	})
-
 	if err != nil {
 		s.handlePublishError(err, curBatch)
 		return
@@ -174,9 +177,11 @@ func (s *Shipper) publishBatch() {
 	}
 	s.logger.Trace().Msg("published batch")
 }
+
 func (s *Shipper) ack(msg *nats.Msg) {
 	_ = msg.Ack(nats.Context(s.ctx))
 }
+
 func (s *Shipper) nak(msg *nats.Msg) {
 	_ = msg.Nak(nats.Context(s.ctx))
 }

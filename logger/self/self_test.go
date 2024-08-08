@@ -174,7 +174,7 @@ func makeDecision() *api.Decision {
 	return &api.Decision{
 		Id: uuid.NewString(),
 		// TenantId:  "e5e07c3c-c449-11eb-a518-0045ec92c058",
-		Timestamp: timestamppb.New(time.Date(2021, time.September, 0o2, 17, 22, 0, 0, time.UTC)),
+		Timestamp: timestamppb.New(time.Date(2021, time.September, 2, 17, 22, 0, 0, time.UTC)),
 		User: &api.DecisionUser{
 			Context: &api.IdentityContext{
 				Identity: "some@name.org",

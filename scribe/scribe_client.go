@@ -56,7 +56,7 @@ type Client struct {
 
 type ClientBatchFunc func(ack bool, err error)
 
-func NewClient(ctx context.Context, conn grpc.ClientConnInterface, opts ...ClientOpt) (*Client, error) {
+func NewClient(ctx context.Context, conn *grpc.ClientConn, opts ...ClientOpt) (*Client, error) {
 	cliOpt := clientOptions{
 		maxInflight:    20,
 		ackWaitSeconds: 10,
@@ -99,7 +99,6 @@ func (c *Client) WriteBatch(ctx context.Context, batch []*anypb.Any, cb ClientBa
 		Id:    id,
 		Batch: batch,
 	})
-
 	if err != nil {
 		c.deleteWaiter(id)
 		return err

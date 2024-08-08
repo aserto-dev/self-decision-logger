@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aserto-dev/go-aserto/client"
+	client "github.com/aserto-dev/go-aserto"
 	api "github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
 	"github.com/aserto-dev/self-decision-logger/scribe"
 	"github.com/aserto-dev/self-decision-logger/shipper"
 	decisionlog "github.com/aserto-dev/topaz/decision_log"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 
 	nats_server "github.com/nats-io/nats-server/v2/server"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (

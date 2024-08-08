@@ -1,6 +1,6 @@
 package scribe
 
-import "github.com/aserto-dev/go-aserto/client"
+import client "github.com/aserto-dev/go-aserto"
 
 type Config struct {
 	client.Config `json:",squash"` // nolint:staticcheck // squash is used by mapstructure

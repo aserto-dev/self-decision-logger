@@ -3,7 +3,8 @@ package scribe
 import (
 	"context"
 
-	"github.com/aserto-dev/go-aserto/client"
+	client "github.com/aserto-dev/go-aserto"
+
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -13,11 +14,11 @@ type ClientFactory func() (*Client, error)
 
 func NewClientFactory(ctx context.Context, cfg *Config, dop client.DialOptionsProvider) ClientFactory {
 	return func() (*Client, error) {
-		var conn grpc.ClientConnInterface
+		var conn *grpc.ClientConn
 		var err error
 
 		if cfg.DisableTLS {
-			conn, err = grpc.Dial(cfg.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			conn, err = client.NewConnection(client.WithAddr(cfg.Address), client.WithDialOptions(grpc.WithTransportCredentials(insecure.NewCredentials())))
 			if err != nil {
 				return nil, errors.Wrap(err, "error dialing server")
 			}
@@ -26,7 +27,7 @@ func NewClientFactory(ctx context.Context, cfg *Config, dop client.DialOptionsPr
 			if err != nil {
 				return nil, errors.Wrap(err, "error calculating connection options")
 			}
-			cliConn, err := client.NewConnection(ctx, options...)
+			cliConn, err := client.NewConnection(options...)
 			if err != nil {
 				return nil, errors.Wrap(err, "error calculating connection options")
 			}

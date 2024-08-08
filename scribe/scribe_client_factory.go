@@ -14,11 +14,11 @@ type ClientFactory func() (*Client, error)
 
 func NewClientFactory(ctx context.Context, cfg *Config, dop client.DialOptionsProvider) ClientFactory {
 	return func() (*Client, error) {
-		var conn grpc.ClientConnInterface
+		var conn *grpc.ClientConn
 		var err error
 
 		if cfg.DisableTLS {
-			conn, err = grpc.Dial(cfg.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			conn, err = client.NewConnection(client.WithAddr(cfg.Address), client.WithDialOptions(grpc.WithTransportCredentials(insecure.NewCredentials())))
 			if err != nil {
 				return nil, errors.Wrap(err, "error dialing server")
 			}

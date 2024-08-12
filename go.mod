@@ -7,8 +7,8 @@ toolchain go1.22.5
 // replace github.com/aserto-dev/go-decision-logs => ../go-decision-logs
 
 require (
-	github.com/aserto-dev/go-aserto v0.31.6-0.20240808230126-d4cf89f6c1b5
-	github.com/aserto-dev/go-authorizer v0.20.8
+	github.com/aserto-dev/go-aserto v0.32.0
+	github.com/aserto-dev/go-authorizer v0.20.10
 	github.com/aserto-dev/go-decision-logs v0.0.4
 	github.com/aserto-dev/topaz v0.32.21
 	github.com/google/uuid v1.6.0
@@ -24,7 +24,7 @@ require (
 )
 
 require (
-	github.com/aserto-dev/header v0.0.7 // indirect
+	github.com/aserto-dev/header v0.0.8 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.21.0 // indirect
@@ -41,7 +41,7 @@ require (
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240808171019-573a1156607a // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240808171019-573a1156607a // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240812133136-8ffd90a71988 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240812133136-8ffd90a71988 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

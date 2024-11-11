@@ -30,16 +30,16 @@ type selfLogger struct {
 	shipper    *shipper.Shipper
 }
 
-func New(ctx context.Context, cfg map[string]interface{}, logger *zerolog.Logger, dopts []grpc.DialOption) (decisionlog.DecisionLogger, error) {
+func New(ctx context.Context, cfg map[string]interface{}, logger *zerolog.Logger, dopts ...grpc.DialOption) (decisionlog.DecisionLogger, error) {
 	selfCfg, err := mapConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFromConfig(ctx, selfCfg, logger, dopts)
+	return NewFromConfig(ctx, selfCfg, logger, dopts...)
 }
 
-func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dopts []grpc.DialOption) (decisionlog.DecisionLogger, error) {
+func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dopts ...grpc.DialOption) (decisionlog.DecisionLogger, error) {
 	cfg.SetDefaults()
 
 	opts := &nats_server.Options{

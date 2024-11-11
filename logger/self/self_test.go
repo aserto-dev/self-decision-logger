@@ -217,7 +217,7 @@ func TestSelfLogger(t *testing.T) {
 	cleanup := runServer(ctx, assert, logs, done, received)
 	defer cleanup()
 
-	dlog, err := self.NewFromConfig(ctx, &cfg, &l, client.NewDialOptionsProvider())
+	dlog, err := self.NewFromConfig(ctx, &cfg, &l, []grpc.DialOption{})
 	assert.NoError(err)
 	defer dlog.Shutdown()
 
@@ -263,7 +263,7 @@ func TestSelfLoggerWithDisconnect(t *testing.T) {
 		done <- true
 	}()
 
-	dlog, err := self.NewFromConfig(ctx, &cfg, &l, client.NewDialOptionsProvider())
+	dlog, err := self.NewFromConfig(ctx, &cfg, &l, []grpc.DialOption{})
 	assert.NoError(err)
 	defer dlog.Shutdown()
 

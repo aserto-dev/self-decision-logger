@@ -12,7 +12,7 @@ import (
 
 type ClientFactory func() (*Client, error)
 
-func NewClientFactory(ctx context.Context, cfg *Config, dop ...grpc.DialOption) ClientFactory {
+func NewClientFactory(ctx context.Context, cfg *Config, dopts ...grpc.DialOption) ClientFactory {
 	return func() (*Client, error) {
 		var conn *grpc.ClientConn
 		var err error
@@ -23,7 +23,7 @@ func NewClientFactory(ctx context.Context, cfg *Config, dop ...grpc.DialOption) 
 				return nil, errors.Wrap(err, "error dialing server")
 			}
 		} else {
-			if cliConn, err := cfg.Config.Connect(client.WithDialOptions(dop...)); err != nil {
+			if cliConn, err := cfg.Config.Connect(client.WithDialOptions(dopts...)); err != nil {
 				conn = cliConn
 			}
 		}

@@ -63,7 +63,7 @@ func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dop
 		return nil, errors.Wrap(err, "error creating nats client")
 	}
 
-	scf := scribe.NewClientFactory(ctx, &cfg.Scribe, dopts)
+	scf := scribe.NewClientFactory(ctx, &cfg.Scribe, dopts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating scribe client")
 	}

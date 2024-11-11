@@ -12,7 +12,7 @@ import (
 
 type ClientFactory func() (*Client, error)
 
-func NewClientFactory(ctx context.Context, cfg *Config, dop []grpc.DialOption) ClientFactory {
+func NewClientFactory(ctx context.Context, cfg *Config, dop ...grpc.DialOption) ClientFactory {
 	return func() (*Client, error) {
 		var conn *grpc.ClientConn
 		var err error
@@ -23,18 +23,9 @@ func NewClientFactory(ctx context.Context, cfg *Config, dop []grpc.DialOption) C
 				return nil, errors.Wrap(err, "error dialing server")
 			}
 		} else {
-			options, err := cfg.Config.ToConnectionOptions()
-			if err != nil {
-				return nil, errors.Wrap(err, "error calculating connection options")
+			if cliConn, err := cfg.Config.Connect(client.WithDialOptions(dop...)); err != nil {
+				conn = cliConn
 			}
-
-			options = append(options, client.WithDialOptions(dop...))
-
-			cliConn, err := client.NewConnection(options...)
-			if err != nil {
-				return nil, errors.Wrap(err, "error calculating connection options")
-			}
-			conn = cliConn
 		}
 
 		scribeCli, err := NewClient(ctx, conn, AckWaitSeconds(cfg.AckWaitSeconds))

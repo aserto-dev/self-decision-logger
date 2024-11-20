@@ -24,10 +24,6 @@ func NewClientFactory(ctx context.Context, cfg *Config, dopts ...grpc.DialOption
 
 	return func() (*Client, error) {
 		scribeCli, err := NewClient(ctx, conn, AckWaitSeconds(cfg.AckWaitSeconds))
-		if err != nil {
-			return nil, errors.Wrap(err, "error creating scribe client")
-		}
-
-		return scribeCli, nil
+		return scribeCli, errors.Wrap(err, "error creating scribe client")
 	}, nil
 }

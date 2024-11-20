@@ -7,7 +7,7 @@ toolchain go1.22.5
 // replace github.com/aserto-dev/go-decision-logs => ../go-decision-logs
 
 require (
-	github.com/aserto-dev/go-aserto v0.32.2-0.20241111205103-d469387b8361
+	github.com/aserto-dev/go-aserto v0.33.3-0.20241120143929-5f27b365fe0e
 	github.com/aserto-dev/go-authorizer v0.20.11
 	github.com/aserto-dev/go-decision-logs v0.1.2
 	github.com/aserto-dev/topaz v0.32.33

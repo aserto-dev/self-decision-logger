@@ -1,5 +1,5 @@
-github.com/aserto-dev/go-aserto v0.32.2-0.20241111205103-d469387b8361 h1:pmfpq1wPbqDafcs8ysPjxvewOG+MWXqvW8UecKhl5c8=
-github.com/aserto-dev/go-aserto v0.32.2-0.20241111205103-d469387b8361/go.mod h1:t2qs6Q7pXlMkKh5MhbssKDbGb62f36Q6Bj3QDXww31s=
+github.com/aserto-dev/go-aserto v0.33.3-0.20241120143929-5f27b365fe0e h1:UMDuESIUQYpeaA3lf3dBT/R/nErLKA99UXCfrFd+dgo=
+github.com/aserto-dev/go-aserto v0.33.3-0.20241120143929-5f27b365fe0e/go.mod h1:t2qs6Q7pXlMkKh5MhbssKDbGb62f36Q6Bj3QDXww31s=
 github.com/aserto-dev/go-authorizer v0.20.11 h1:OaYJwyljt2yBuDtIiMl1mqjyMU0dUuv1eZsBNHo4+O4=
 github.com/aserto-dev/go-authorizer v0.20.11/go.mod h1:iwVdTU2xOrNW0TZ+UWX+Mn2hgR2Lj1XmKgei0tt5pbY=
 github.com/aserto-dev/go-decision-logs v0.1.2 h1:f26bgKDIroNeN71+Ot2AXfCAtausNcBykF94RWP5I0I=

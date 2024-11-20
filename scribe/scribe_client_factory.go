@@ -7,25 +7,19 @@ import (
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type ClientFactory func() (*Client, error)
 
 func NewClientFactory(ctx context.Context, cfg *Config, dopts ...grpc.DialOption) ClientFactory {
-	return func() (*Client, error) {
-		var conn *grpc.ClientConn
-		var err error
+	if cfg.DisableTLS {
+		cfg.NoTLS = true
+	}
 
-		if cfg.DisableTLS {
-			conn, err = client.NewConnection(client.WithAddr(cfg.Address), client.WithDialOptions(grpc.WithTransportCredentials(insecure.NewCredentials())))
-			if err != nil {
-				return nil, errors.Wrap(err, "error dialing server")
-			}
-		} else {
-			if cliConn, err := cfg.Config.Connect(client.WithDialOptions(dopts...)); err != nil {
-				conn = cliConn
-			}
+	return func() (*Client, error) {
+		conn, err := cfg.Config.Connect(client.WithDialOptions(dopts...))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create grpc client")
 		}
 
 		scribeCli, err := NewClient(ctx, conn, AckWaitSeconds(cfg.AckWaitSeconds))

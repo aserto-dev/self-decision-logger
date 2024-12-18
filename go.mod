@@ -11,8 +11,8 @@ require (
 	github.com/aserto-dev/go-authorizer v0.20.11
 	github.com/aserto-dev/go-decision-logs v0.1.2
 	github.com/aserto-dev/topaz v0.32.33
+	github.com/go-viper/mapstructure/v2 v2.2.1
 	github.com/google/uuid v1.6.0
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nats-io/nats-server/v2 v2.10.22
 	github.com/nats-io/nats.go v1.37.0
 	github.com/pkg/errors v0.9.1

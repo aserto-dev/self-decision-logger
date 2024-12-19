@@ -8,7 +8,6 @@ import (
 	api "github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
 	"github.com/aserto-dev/self-decision-logger/scribe"
 	"github.com/aserto-dev/self-decision-logger/shipper"
-	decisionlog "github.com/aserto-dev/topaz/decision_log"
 
 	nats_server "github.com/nats-io/nats-server/v2/server"
 	"github.com/nats-io/nats.go"
@@ -24,13 +23,13 @@ const (
 	subject = "decision-logs-v2"
 )
 
-type selfLogger struct {
+type Logger struct {
 	jsCtx      nats.JetStreamContext
 	natsServer *nats_server.Server
 	shipper    *shipper.Shipper
 }
 
-func New(ctx context.Context, cfg map[string]interface{}, logger *zerolog.Logger, dopts ...grpc.DialOption) (decisionlog.DecisionLogger, error) {
+func New(ctx context.Context, cfg map[string]interface{}, logger *zerolog.Logger, dopts ...grpc.DialOption) (*Logger, error) {
 	selfCfg, err := mapConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -39,7 +38,7 @@ func New(ctx context.Context, cfg map[string]interface{}, logger *zerolog.Logger
 	return NewFromConfig(ctx, selfCfg, logger, dopts...)
 }
 
-func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dopts ...grpc.DialOption) (decisionlog.DecisionLogger, error) {
+func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dopts ...grpc.DialOption) (*Logger, error) {
 	cfg.SetDefaults()
 
 	opts := &nats_server.Options{
@@ -55,10 +54,6 @@ func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dop
 	go natsServer.Start()
 	natsServer.ReadyForConnections(time.Second * 10)
 	natsCli, err := nats.Connect(fmt.Sprintf("localhost:%d", cfg.Port))
-	if err != nil {
-		logger.Err(err).Msg("error connecting NATS client")
-		return nil, err
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating nats client")
 	}
@@ -76,7 +71,7 @@ func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dop
 	if err != nil {
 		return nil, errors.Wrap(err, "error establishing jetstream context")
 	}
-	l := &selfLogger{
+	l := &Logger{
 		jsCtx:      jsCtx,
 		natsServer: natsServer,
 		shipper:    shpr,
@@ -85,7 +80,7 @@ func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dop
 	return l, nil
 }
 
-func (l *selfLogger) Log(d *api.Decision) error {
+func (l *Logger) Log(d *api.Decision) error {
 	pub, err := anypb.New(d)
 	if err != nil {
 		return errors.Wrap(err, "error creating any wrapper")
@@ -104,7 +99,7 @@ func (l *selfLogger) Log(d *api.Decision) error {
 	return nil
 }
 
-func (l *selfLogger) Shutdown() {
+func (l *Logger) Shutdown() {
 	if l.shipper != nil {
 		l.shipper.Shutdown()
 	}

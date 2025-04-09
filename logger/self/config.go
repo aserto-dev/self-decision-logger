@@ -5,7 +5,7 @@ import (
 
 	"github.com/aserto-dev/self-decision-logger/scribe"
 	"github.com/aserto-dev/self-decision-logger/shipper"
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/pkg/errors"
 )
 

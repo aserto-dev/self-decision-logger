@@ -21,6 +21,8 @@ import (
 const (
 	stream  = "decision-log-stream-v2"
 	subject = "decision-logs-v2"
+
+	readyTimeout = 10 * time.Second
 )
 
 type Logger struct {
@@ -47,12 +49,16 @@ func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dop
 		JetStream: true,
 		StoreDir:  cfg.StoreDirectory,
 	}
+
 	natsServer, err := nats_server.NewServer(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "error starting nats server")
 	}
+
 	go natsServer.Start()
-	natsServer.ReadyForConnections(time.Second * 10)
+
+	natsServer.ReadyForConnections(readyTimeout)
+
 	natsCli, err := nats.Connect(fmt.Sprintf("localhost:%d", cfg.Port))
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating nats client")
@@ -67,10 +73,12 @@ func NewFromConfig(ctx context.Context, cfg *Config, logger *zerolog.Logger, dop
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating lumberjack client")
 	}
+
 	jsCtx, err := natsCli.JetStream()
 	if err != nil {
 		return nil, errors.Wrap(err, "error establishing jetstream context")
 	}
+
 	l := &Logger{
 		jsCtx:      jsCtx,
 		natsServer: natsServer,
@@ -103,6 +111,7 @@ func (l *Logger) Shutdown() {
 	if l.shipper != nil {
 		l.shipper.Shutdown()
 	}
+
 	if l.natsServer != nil {
 		l.natsServer.Shutdown()
 	}

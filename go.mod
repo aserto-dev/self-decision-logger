@@ -1,8 +1,8 @@
 module github.com/aserto-dev/self-decision-logger
 
-go 1.22.11
+go 1.23
 
-toolchain go1.23.5
+toolchain go1.24.2
 
 // replace github.com/aserto-dev/go-decision-logs => ../go-decision-logs
 

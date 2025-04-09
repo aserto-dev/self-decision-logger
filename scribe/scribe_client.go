@@ -14,6 +14,11 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+const (
+	defaultMaxInflight    = 20
+	defaultAckWaitSeconds = 10
+)
+
 type ackWaiter struct {
 	cb    ClientBatchFunc
 	timer *time.Timer
@@ -41,6 +46,7 @@ func (w AckWaitSeconds) applyClient(cliOpts *clientOptions) error {
 	}
 
 	cliOpts.ackWaitSeconds = int(w)
+
 	return nil
 }
 
@@ -58,8 +64,8 @@ type ClientBatchFunc func(ack bool, err error)
 
 func NewClient(ctx context.Context, conn *grpc.ClientConn, opts ...ClientOpt) (*Client, error) {
 	cliOpt := clientOptions{
-		maxInflight:    20,
-		ackWaitSeconds: 10,
+		maxInflight:    defaultMaxInflight,
+		ackWaitSeconds: defaultAckWaitSeconds,
 	}
 
 	for _, o := range opts {
@@ -70,6 +76,7 @@ func NewClient(ctx context.Context, conn *grpc.ClientConn, opts ...ClientOpt) (*
 	}
 
 	cli := scribe.NewScribeClient(conn)
+
 	wbCli, err := cli.WriteBatch(ctx)
 	if err != nil {
 		return nil, err
@@ -115,9 +122,9 @@ func (c *Client) ackLoop() {
 			break
 		}
 
-		w := c.deleteWaiter(resp.Id)
+		w := c.deleteWaiter(resp.GetId())
 		if w != nil {
-			w.cb(resp.Ack, nil)
+			w.cb(resp.GetAck(), nil)
 		}
 	}
 }
@@ -140,6 +147,7 @@ func (c *Client) addWaiter(cb ClientBatchFunc) string {
 		}),
 	}
 	c.mtx.Unlock()
+
 	return id
 }
 
@@ -154,6 +162,8 @@ func (c *Client) deleteWaiter(id string) *ackWaiter {
 	}
 
 	c.sem.Release(1)
+
 	_ = w.timer.Stop()
+
 	return &w
 }

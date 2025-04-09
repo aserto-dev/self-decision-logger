@@ -36,16 +36,20 @@ func New(ctx context.Context, logger *zerolog.Logger, cfg *Config, natsCli *nats
 	cfg.SetDefaults()
 
 	newLogger := logger.With().Str("component", "shipper").Logger()
+
 	jsCtx, err := natsCli.JetStream()
 	if err != nil {
 		return nil, errors.Wrap(err, "error establishing jetstream context")
 	}
+
 	if cfg.MaxBatchSize < 1 {
 		return nil, errors.New("invalid max batch size, must be > 0")
 	}
+
 	if cfg.PublishTimeoutSeconds < 1 {
 		return nil, errors.New("invalid publish timeout error, must be > 0")
 	}
+
 	_, err = jsCtx.AddStream(&nats.StreamConfig{
 		Name:        stream,
 		Description: "Authorizer decision logs stream",
@@ -58,6 +62,7 @@ func New(ctx context.Context, logger *zerolog.Logger, cfg *Config, natsCli *nats
 	if err != nil && errors.Is(err, nats.ErrStreamNameAlreadyInUse) {
 		return nil, errors.Wrap(err, "error adding decision-logs stream")
 	}
+
 	ctx, cancel := context.WithCancel(ctx)
 
 	s := &Shipper{
@@ -74,16 +79,18 @@ func New(ctx context.Context, logger *zerolog.Logger, cfg *Config, natsCli *nats
 	if !s.timer.Stop() {
 		<-s.timer.C
 	}
-	err = s.run()
-	if err != nil {
+
+	if err := s.run(); err != nil {
 		return nil, err
 	}
+
 	return s, nil
 }
 
 func (s *Shipper) Shutdown() {
 	s.cancel()
 	_ = s.subs.Unsubscribe()
+
 	if s.cfg.DeleteStreamOnDone && s.jsCtx != nil {
 		_ = s.jsCtx.DeleteStream(stream)
 	}
@@ -100,7 +107,9 @@ func (s *Shipper) run() error {
 	if err != nil {
 		return errors.Wrap(err, "error subscribing to decision queue")
 	}
+
 	s.subs = subs
+
 	go func() {
 		for {
 			select {
@@ -113,7 +122,9 @@ func (s *Shipper) run() error {
 			}
 		}
 	}()
+
 	s.logger.Info().Msg("shipper is running")
+
 	return nil
 }
 
@@ -121,6 +132,7 @@ func (s *Shipper) handleMsg(msg *nats.Msg) {
 	if s.batch == nil {
 		s.timer.Reset(time.Second * time.Duration(s.cfg.PublishTimeoutSeconds))
 	}
+
 	s.batch = append(s.batch, msg)
 	if len(s.batch) == s.cfg.MaxBatchSize {
 		s.publishBatch()
@@ -131,14 +143,17 @@ func (s *Shipper) publishBatch() {
 	s.logger.Trace().Msgf("publishing batch with size: %d", len(s.batch))
 
 	data := make([]*anypb.Any, 0, len(s.batch))
+
 	for _, msg := range s.batch {
 		pub := anypb.Any{}
-		err := proto.Unmarshal(msg.Data, &pub)
-		if err != nil {
+
+		if err := proto.Unmarshal(msg.Data, &pub); err != nil {
 			s.logger.Error().Err(err).Msg("error unmarshalling message")
 			s.nak(msg)
+
 			continue
 		}
+
 		data = append(data, &pub)
 	}
 
@@ -159,9 +174,11 @@ func (s *Shipper) publishBatch() {
 			s.logger.Info().Err(err).Msg("received an error in ack callback")
 			f = s.nak
 		}
+
 		for _, msg := range curBatch {
 			f(msg)
 		}
+
 		s.logger.Trace().Msgf("processed %d acks", len(curBatch))
 	})
 	if err != nil {
@@ -175,6 +192,7 @@ func (s *Shipper) publishBatch() {
 		default:
 		}
 	}
+
 	s.logger.Trace().Msg("published batch")
 }
 
@@ -192,6 +210,7 @@ func (s *Shipper) getScribeClient() (*scribe.Client, error) {
 	}
 
 	var err error
+
 	s.scribeCli, err = s.scf()
 	if err != nil {
 		s.scribeCli = nil
@@ -205,8 +224,10 @@ func (s *Shipper) getScribeClient() (*scribe.Client, error) {
 
 func (s *Shipper) handlePublishError(err error, batch []*nats.Msg) {
 	s.logger.Info().Err(err).Msg("error publishing batch")
+
 	for _, msg := range batch {
 		s.nak(msg)
 	}
+
 	s.scribeCli = nil
 }

@@ -2,7 +2,6 @@ package self_test
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net"
 	"testing"
@@ -14,8 +13,10 @@ import (
 	self "github.com/aserto-dev/self-decision-logger/logger/self"
 	scribe_cli "github.com/aserto-dev/self-decision-logger/scribe"
 	shipper "github.com/aserto-dev/self-decision-logger/shipper"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -70,6 +71,7 @@ type mockServer struct {
 
 func newMockServer(ctx context.Context, cb func(ctx context.Context, batch *mockBatch)) *mockServer {
 	cctx, cancel := context.WithCancel(ctx)
+
 	return &mockServer{
 		ctx:     cctx,
 		cancel:  cancel,
@@ -83,19 +85,20 @@ func (s *mockServer) WriteBatch(wbs scribe_grpc.Scribe_WriteBatchServer) error {
 	go func() {
 		for {
 			req, err := wbs.Recv()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				s.errCh <- nil
 				break
 			}
+
 			if err != nil {
 				s.errCh <- err
 				break
 			}
 
 			b := mockBatch{
-				ID:    req.Id,
+				ID:    req.GetId(),
 				wbSrv: wbs,
-				Batch: req.Batch,
+				Batch: req.GetBatch(),
 			}
 
 			go s.handler(wbs.Context(), &b)
@@ -114,20 +117,15 @@ func (s *mockServer) WriteBatch(wbs scribe_grpc.Scribe_WriteBatchServer) error {
 
 func startScribe(ctx context.Context, assert *require.Assertions, cb func(ctx context.Context, batch *mockBatch)) func() {
 	l, err := net.Listen("tcp", scribeAddress)
-	if err != nil {
-		assert.FailNow(err.Error())
-	}
+	assert.NoError(err)
 
 	grpcSrv := grpc.NewServer()
-
 	scribeSrv := newMockServer(ctx, cb)
 
 	grpcSrv.RegisterService(&scribe_grpc.Scribe_ServiceDesc, scribeSrv)
+
 	go func() {
-		err := grpcSrv.Serve(l)
-		if err != nil {
-			assert.FailNow("server failed to start")
-		}
+		_ = grpcSrv.Serve(l)
 	}()
 
 	return func() {
@@ -149,21 +147,24 @@ func runServer(ctx context.Context, assert *require.Assertions, logs int, done c
 			case b := <-recv:
 				for _, any := range b.Batch {
 					d := api.Decision{}
-					err := anypb.UnmarshalTo(any, &d, proto.UnmarshalOptions{})
-					if err != nil {
-						assert.FailNow("failed to unmarshal decision")
-						count = -1
-						continue
+
+					if err := anypb.UnmarshalTo(any, &d, proto.UnmarshalOptions{}); err != nil {
+						done <- false
+
+						return
 					}
-					received[d.Id] = true
+
+					received[d.GetId()] = true
 				}
+
 				count -= len(b.Batch)
+
 				b.Ack()
 			case <-ctx.Done():
 				count = -1
 			}
 		}
-		assert.Zero(count)
+
 		done <- true
 	}()
 
@@ -207,78 +208,80 @@ func makeDecision() *api.Decision {
 func TestSelfLogger(t *testing.T) {
 	assert := require.New(t)
 	l := zerolog.Nop()
+
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
 
 	received := map[string]bool{}
 	done := make(chan bool)
 	logs := 10000
 
 	cleanup := runServer(ctx, assert, logs, done, received)
-	defer cleanup()
+	t.Cleanup(cleanup)
 
 	dlog, err := self.NewFromConfig(ctx, &cfg, &l)
 	assert.NoError(err)
-	defer dlog.Shutdown()
+	t.Cleanup(dlog.Shutdown)
 
 	start := time.Now()
 
-	for i := 0; i < logs; i++ {
+	for range logs {
 		err := dlog.Log(makeDecision())
 		assert.NoError(err)
 	}
 
 	select {
-	case <-done:
-		fmt.Printf("elapsed: %s\n", time.Since(start))
+	case success := <-done:
+		t.Logf("elapsed: %s", time.Since(start))
+		assert.True(success)
 	case <-time.After(time.Second * 30):
 		assert.Fail("timed out")
 	}
-	assert.Equal(logs, len(received))
+	assert.Len(received, logs)
 }
 
 func TestSelfLoggerWithDisconnect(t *testing.T) {
 	assert := require.New(t)
 	l := zerolog.Nop()
+
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	t.Cleanup(cancel)
 
 	received := map[string]bool{}
-	done := make(chan bool)
-	logs := 50000
 	logsPerServer := 10000
 
-	go func() {
-		for i := 0; i < 5; i++ {
+	errGroup := new(errgroup.Group)
+
+	errGroup.Go(func() error {
+		for range 5 {
 			serverDone := make(chan bool)
 			cleanup := runServer(ctx, assert, logsPerServer, serverDone, received)
 			select {
 			case <-serverDone:
+				cleanup()
 			case <-time.After(time.Second * 30):
-				assert.Fail("timed out")
+				cleanup()
+				return errors.New("timed out")
 			}
-			cleanup()
 		}
 
-		done <- true
-	}()
+		return nil
+	})
 
 	dlog, err := self.NewFromConfig(ctx, &cfg, &l)
 	assert.NoError(err)
-	defer dlog.Shutdown()
+	t.Cleanup(dlog.Shutdown)
 
 	start := time.Now()
 
-	for i := 0; i < logs; i++ {
+	logs := 50000
+	for range logs {
 		err := dlog.Log(makeDecision())
 		assert.NoError(err)
 	}
 
-	select {
-	case <-done:
-		fmt.Printf("elapsed: %s\n", time.Since(start))
-	case <-time.After(time.Second * 30):
-		assert.Fail("timed out")
-	}
-	assert.Equal(logs, len(received))
+	assert.NoError(errGroup.Wait())
+	t.Logf("elapsed: %s", time.Since(start))
+
+	assert.Len(received, logs)
 }

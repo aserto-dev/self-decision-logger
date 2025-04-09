@@ -17,7 +17,7 @@ func NewClientFactory(ctx context.Context, cfg *Config, dopts ...grpc.DialOption
 		cfg.NoTLS = true
 	}
 
-	conn, err := cfg.Config.Connect(client.WithDialOptions(dopts...))
+	conn, err := cfg.Connect(client.WithDialOptions(dopts...))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create grpc connection")
 	}
